@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Ficha do Candidato</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:40px;
+}
+
+.card{
+border:1px solid #ccc;
+padding:20px;
+margin-bottom:20px;
+border-radius:6px;
+}
+
+.titulo{
+background:#003366;
+color:white;
+padding:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Ficha do Candidato</h2>
+
+<div class="card">
+
+<h3>{{ candidato.nome }}</h3>
+
+<p><strong>RA:</strong> {{ candidato.ra }}</p>
+
+<p><strong>Situação:</strong> {{ candidato.solucao }}</p>
+
+</div>
+
+<div class="card">
+
+<div class="titulo">Status das Etapas</div>
+
+<p>Psicologia: {{ candidato.psicologia.status }}</p>
+
+<p>Exame Médico: {{ candidato.exame_medico.status }}</p>
+
+<p>TACF: {{ candidato.tacf.status }}</p>
+
+<p>Entrevista: {{ candidato.entrevista.status }}</p>
+
+</div>
+
+<div class="card">
+
+<div class="titulo">Documentos</div>
+
+<p>Documentos enviados pelo candidato.</p>
+
+</div>
+
+</body>
+
+</html>

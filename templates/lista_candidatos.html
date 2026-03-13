@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Candidatos</title>
+
+<style>
+
+body{
+font-family: Arial;
+margin:40px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+border:1px solid #ddd;
+text-align:center;
+}
+
+th{
+background:#003366;
+color:white;
+}
+
+input{
+padding:8px;
+}
+
+button{
+padding:8px;
+}
+
+.paginacao{
+margin-top:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Lista de Candidatos</h2>
+
+<form method="get">
+
+<input type="text" name="busca" placeholder="Buscar por nome ou RA">
+
+<button type="submit">Buscar</button>
+
+</form>
+
+<br>
+
+<table>
+
+<tr>
+<th>RA</th>
+<th>Nome</th>
+<th>Solução</th>
+<th>Ações</th>
+</tr>
+
+{% for candidato in candidatos %}
+
+<tr>
+
+<td>{{ candidato.ra }}</td>
+<td>{{ candidato.nome }}</td>
+<td>{{ candidato.solucao }}</td>
+
+<td>
+
+<a href="/candidato/{{ candidato.id }}/">
+<button>Ver ficha</button>
+</a>
+
+<button>Editar</button>
+
+<button>Docs</button>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+<div class="paginacao">
+
+{% if candidatos.has_previous %}
+
+<a href="?page=1">Primeira</a>
+
+<a href="?page={{ candidatos.previous_page_number }}">Anterior</a>
+
+{% endif %}
+
+Página {{ candidatos.number }} de {{ candidatos.paginator.num_pages }}
+
+{% if candidatos.has_next %}
+
+<a href="?page={{ candidatos.next_page_number }}">Próxima</a>
+
+<a href="?page={{ candidatos.paginator.num_pages }}">Última</a>
+
+{% endif %}
+
+</div>
+
+</body>
+
+</html>

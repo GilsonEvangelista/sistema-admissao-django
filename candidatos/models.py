@@ -5,6 +5,20 @@ class Candidato(models.Model):
     nome = models.CharField(max_length=200)
     solucao = models.CharField(max_length=100, blank=True, null=True)
 
+    STATUS_CANDIDATO = [
+        ('ANALISE', 'Em análise'),
+        ('APTO', 'Apto'),
+        ('INAPTO', 'Inapto'),
+        ('SERVIR', 'Quer servir'),
+        ('TITULAR', 'Titular'),
+    ]
+
+    status = models.CharField(
+        max_length=15, 
+        choices=STATUS_CANDIDATO, 
+        default='ANALISE'
+        )
+
     def __str__(self):
         return self.nome
     

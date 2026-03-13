@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Sistema de Admissão</title>
+
+<style>
+
+body{
+    font-family: Arial;
+    margin:0;
+}
+
+header{
+    background:#003366;
+    color:white;
+    padding:15px;
+}
+
+nav{
+    background:#eeeeee;
+    padding:10px;
+}
+
+nav a{
+    margin-right:15px;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+.container{
+    padding:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+<h2> Sistema de Admissão </h2>
+</header>
+
+<nav>
+
+<a href="/dashboard">Dashboard</a>
+<a href="{% url 'lista_candidatos' %}">Candidatos</a>
+<a href="#">Documentos</a>
+<a href="#">Avaliações</a>
+<a href="#">Relatórios</a>
+
+</nav>
+
+<div class="container">
+
+{% block content %}
+
+{% endblock %}
+
+</div>
+
+</body>
+</html>

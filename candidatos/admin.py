@@ -7,6 +7,7 @@ class DocumentoInLine(admin.TabularInline):
 
 class CandidatoAdmin(admin.ModelAdmin):
     inline = [DocumentoInLine]
+    list_display = ('ra', 'nome', 'status')
 
 admin.site.register(Candidato, CandidatoAdmin)
 admin.site.register(ExameMedico)
