@@ -8,6 +8,37 @@ class Candidato(models.Model):
     def __str__(self):
         return self.nome
     
+def caminho_documento(instance, filename):
+    return f'documentos/candidato_{instance.candidato.id}/{filename}'
+
+class Documento(models.Model):
+
+    candidato = models.ForeignKey('Candidato', on_delete=models.CASCADE, related_name='documentos')
+
+    TIPO_DOCUMENTO = [
+        ('RG', 'RG'),
+        ('CPF', 'CPF'),
+        ('RESIDENCIA', 'Comprovante de Residência'),
+        ('HISTORICO', 'Histórico Escolar'),
+        ('OUTRO', 'Outro'),
+    ]
+
+    tipo = models.CharField(
+        max_length=20,
+        choices=TIPO_DOCUMENTO
+    )
+
+    arquivo = models.FileField(
+        upload_to=caminho_documento
+    )
+
+    data_upload = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return f"{self.candidato.nome} - {self.tipo}"
+    
 class ExameMedico(models.Model):
 
     candidato = models.ForeignKey(Candidato, on_delete=models.CASCADE)
