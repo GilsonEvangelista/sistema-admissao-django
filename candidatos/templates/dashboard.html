@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h2>Resumo do Processo</h2>
+
+<canvas id="grafico"></canvas>
+
+<script>
+    const ctx = document.getElementById('grafico');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Aprovado', 'Reprovado', 'Em análise'],
+            datasets: [{
+                label: 'Candidatos',
+                data: [10, 5, 8],
+                borderWidth: 1
+            }]
+        }
+    });
+</script>
+
+</body>
+</html>
