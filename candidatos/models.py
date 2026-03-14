@@ -1,9 +1,46 @@
 from django.db import models
 
 class Candidato(models.Model):
-    ra = models.IntegerField(unique=True)
+
+    protocolo = models.CharField(max_length=50, blank=True)
+
+    ra = models.CharField(max_length=20, blank=True, null=True)
+
     nome = models.CharField(max_length=200)
-    solucao = models.CharField(max_length=100, blank=True, null=True)
+
+    cpf = models.CharField(max_length=20, blank=True, null=True)
+
+    nome_mae = models.CharField(max_length=200, blank=True)
+
+    nome_pai = models.CharField(max_length=200, blank=True)
+
+    data_nascimento = models.DateField(null=True, blank=True)
+
+    rg = models.CharField(max_length=20, blank=True)
+
+    data_emissao_rg = models.DateField(null=True, blank=True)
+
+    orgao_emissor_rg = models.CharField(max_length=50, blank=True)
+
+    titulo_eleitor = models.CharField(max_length=20, blank=True)
+
+    cnh = models.CharField(max_length=20, blank=True)
+
+    estado_civil = models.CharField(max_length=20, blank=True)
+
+    nivel_ensino = models.CharField(max_length=50, blank=True)
+
+    telefone = models.CharField(max_length=20, blank=True)
+
+    endereco = models.TextField(blank=True)
+
+    email = models.EmailField(blank=True)
+
+    experiencia_profissional = models.TextField(blank=True)
+
+    deseja_servir = models.BooleanField(default=False)
+
+    data_importacao = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     STATUS_CANDIDATO = [
         ('ANALISE', 'Em análise'),
@@ -20,7 +57,22 @@ class Candidato(models.Model):
         )
 
     def __str__(self):
-        return self.nome
+        return f"{self.nome} - {self.cpf}"
+    
+    ETAPAS = [
+    ("inscrito", "Inscrito"),
+    ("documentos", "Documentos Aprovados"),
+    ("psicologia", "Psicologia"),
+    ("entrevista", "Entrevista"),
+    ("tacf", "TACF"),
+    ("medico", "Exame Médico"),
+]
+
+    etapa = models.CharField(
+        max_length=20,
+        choices=ETAPAS,
+        default="inscrito"
+)
     
 def caminho_documento(instance, filename):
     return f'documentos/candidato_{instance.candidato.id}/{filename}'
@@ -29,26 +81,13 @@ class Documento(models.Model):
 
     candidato = models.ForeignKey('Candidato', on_delete=models.CASCADE, related_name='documentos')
 
-    TIPO_DOCUMENTO = [
-        ('RG', 'RG'),
-        ('CPF', 'CPF'),
-        ('RESIDENCIA', 'Comprovante de Residência'),
-        ('HISTORICO', 'Histórico Escolar'),
-        ('OUTRO', 'Outro'),
-    ]
-
     tipo = models.CharField(
-        max_length=20,
-        choices=TIPO_DOCUMENTO
+        max_length=100,
     )
 
-    arquivo = models.FileField(
-        upload_to=caminho_documento
-    )
+    link = models.URLField(blank=True, null=True)
 
-    data_upload = models.DateTimeField(
-        auto_now_add=True
-    )
+    data_importacao = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.candidato.nome} - {self.tipo}"

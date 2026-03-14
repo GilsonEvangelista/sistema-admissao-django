@@ -18,11 +18,12 @@ from django.contrib import admin
 from django.urls import path, include
 from candidatos.views import lista_candidatos
 from candidatos.views import ficha_candidato
+from candidatos.views import importar_excel
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('candidatos.urls')),
     path('candidatos/', lista_candidatos, name='lista_candidatos'),
-    path('admin/', admin.site.urls),
-    path('candidato/<int:candidato_id>/', ficha_candidato, name='ficha_candidato')
+    path('candidato/<int:candidato_id>/', ficha_candidato, name='ficha_candidato'),
+    path('importar-candidatos/', importar_excel, name='importar_excel')
 ]

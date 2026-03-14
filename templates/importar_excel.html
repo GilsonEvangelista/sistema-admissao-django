@@ -1,0 +1,11 @@
+<h2>Importar candidatos</h2>
+
+<form method="post" enctype="multipart/form-data">
+
+{% csrf_token %}
+
+<input type="file" name="arquivo">
+
+<button type="submit">Importar</button>
+
+</form>
