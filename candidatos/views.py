@@ -1,11 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.contrib.auth import authenticate, login
+from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.shortcuts import get_object_or_404
+from django.shortcuts import redirect
+from django.conf import settings
 from .models import Candidato, Documento
-from .utils import importar_candidatos
-import pandas as pd
+import openpyxl
+
 
 def login_view(request):
 
@@ -63,6 +66,28 @@ def dashboard(request):
     candidatos_com_docs = Documento.objects.values("candidato").distinct().count()
     candidatos_pendentes = total_candidatos - candidatos_com_docs
 
+    if candidatos_pendentes > candidatos_com_docs:
+        insight = "⚠️ Muitos candidatos ainda estão com documentos pendentes."
+    else:
+        insight = "✅ A maioria dos candidatos já enviou documentos."
+
+    inscritos = Candidato.objects.filter(etapa="inscrito").count()
+    documentos = Candidato.objects.filter(etapa="documentos").count()
+    psicologia = Candidato.objects.filter(etapa="psicologia").count()
+    entrevista = Candidato.objects.filter(etapa="entrevista").count()
+    tacf = Candidato.objects.filter(etapa="tacf").count()
+    medico = Candidato.objects.filter(etapa="medico").count()
+
+    # Evolução (para gráfico)
+    evolucao_labels = [
+        "Inscrito", "Documentos", "Psicologia",
+        "Entrevista", "TACF", "Médico"
+    ]
+
+    evolucao_values = [
+        inscritos, documentos, psicologia,
+        entrevista, tacf, medico
+    ]
     # Contagem por tipo de documento
     documentos_por_tipo = {}
 
@@ -76,85 +101,105 @@ def dashboard(request):
         "candidatos_pendentes": candidatos_pendentes,
         "doc_labels": list(documentos_por_tipo.keys()),
         "doc_values": list(documentos_por_tipo.values()),
+        'insight': insight,
+        'evolucao_labels': evolucao_labels,
+        'evolucao_values': evolucao_values,
+
     }
 
     return render(request, "dashboard.html", context)
+
+def limpar_cpf(cpf):
+    import re
+    cpf = re.sub(r'\D', '', str(cpf))  # remove tudo que não é número
+    cpf = cpf.zfill(11)
+
+    return cpf
 
 @login_required
 def importar_excel(request):
 
     if request.method == "POST":
 
-        arquivo = request.FILES["arquivo"]
+        arquivo = request.FILES.get('arquivo')
+        
+        if not arquivo:
+            return render(request, 'candidatos/importar.html', {
+                'mensagem': 'Nenhum arquivo enviado.'
+            })
 
-        importar_candidatos(arquivo)
+        wb = openpyxl.load_workbook(arquivo)
+        ws = wb.active
 
-        return redirect("lista_candidatos")
+        headers = [str(cell.value).strip().upper() for cell in ws[1]]
 
-    return render(request, "importar_excel.html")
+        novos = 0
+        atualizados = 0
+        erros = 0
+        erros_detalhados = []  # ✅ FORA do loop
 
-def importar_planilha(request):
+        for row in ws.iter_rows(min_row=2, values_only=True):
 
-    df = pd.read_excel("caminho/da/sua_planilha.xlsx")
+            if not row:
+                continue
 
-    total_linhas = 0
-    total_importados = 0
-    total_existentes = 0
-    total_documentos = 0
+            dados = dict(zip(headers, row))
 
-    for _, row in df.iterrows():
+            try:
+                nome = str(dados.get("NOME-COMPLETO", "")).strip()
+                cpf = limpar_cpf(dados.get("CPF", ""))
+                ra = str(dados.get("RA", "")).strip()
+                email = str(dados.get("EMAIL", "")).strip().lower() if dados.get("EMAIL") else ''
+                etapa = str(dados.get("ETAPA", "inscrito")).strip().lower()
 
-        total_linhas += 1
+                # valida CPF
+                if not cpf:
+                    erros += 1
+                    erros_detalhados.append(f"CPF inválido: {dados}")
+                    continue
 
-        if pd.isna(row["CPF"]):
-            continue
+                obj, created = Candidato.objects.update_or_create(
+                    cpf=cpf,
+                    defaults={
+                        'nome': nome,
+                        'email': email,
+                        'etapa': etapa,
+                        'ra': ra,
+                        'importado': True
+                    }
+                )  # ✅ FECHADO CORRETAMENTE
 
-        cpf = str(row["CPF"])
+                if created:
+                    novos += 1
+                else:
+                    atualizados += 1
 
-        candidato, criado = Candidato.objects.get_or_create(
-            cpf=cpf,
-            defaults={
-                "nome": row["NOME-COMPLETO"],
-                "ra": row["RA"]
-            }
-        )
+            except Exception as e:
+                erros += 1
+                erros_detalhados.append(f"{dados} -> {str(e)}")
+                continue
 
-        if criado:
-            total_importados += 1
-        else:
-            total_existentes += 1
+        return render(request, 'candidatos/importar.html', {
+            'mensagem': f"✅ {novos} novos | 🔄 {atualizados} atualizados | ⚠️ {erros} erros",
+            'erros_detalhados': erros_detalhados[:10]
+        })
 
-        documentos = {
-            "Situação Cadastral": row["ARQUIVO-SITUACAO-CADASTRAL (arquivo)"],
-            "Certidão Nascimento": row["ARQUIVO-CERTIDAO-NASCIMENTO (arquivo)"],
-            "RG": row["ARQUIVO-RG (arquivo)"],
-            "Comprovante Endereço": row["ARQUIVO-ENDERECO (arquivo)"],
-            "Histórico Escolar": row["ARQUIVO-ESCOLAR (arquivo)"],
-            "CNH": row["ARQUIVO-CNH (arquivo)"],
-            "Carteira Trabalho": row["ARQUIVO-CARTEIRA-TRABALHO (arquivo)"],
-        }
-
-        for tipo, link in documentos.items():
-
-            if pd.notna(link):
-
-                Documento.objects.create(
-                    candidato=candidato,
-                    tipo=tipo,
-                    link=link
-                )
-
-                total_documentos += 1
-
-    print("===== RELATÓRIO =====")
-    print("Linhas:", total_linhas)
-    print("Importados:", total_importados)
-    print("Existentes:", total_existentes)
-    print("Documentos:", total_documentos)
-
-    return render(request, "importacao_sucesso.html", {
-        "linhas": total_linhas,
-        "importados": total_importados,
-        "existentes": total_existentes,
-        "documentos": total_documentos
+    return render(request, 'candidatos/importar.html', {
+        'mensagem': ''
     })
+    
+@login_required
+def limpar_candidatos(request):
+
+    # 🔒 PROTEÇÃO: só funciona em modo DEBUG (desenvolvimento)
+    if not settings.DEBUG:
+        return redirect('dashboard')
+
+    if request.method == "POST":
+        total = Candidato.objects.count()
+        Candidato.objects.all().delete()
+        Documento.objects.all().delete()
+
+        messages.success(request, f"{total} candidatos removidos com sucesso.")
+
+    return redirect('dashboard')

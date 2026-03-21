@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Importar Candidatos</title>
+</head>
+<body>
+
+<h1>Importar Planilha (.xlsx)</h1>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <input type="file" name="arquivo" required>
+    <button type="submit">Importar</button>
+
+</form>
+
+{% if mensagem %}
+    <p style="color: green;"><strong>{{ mensagem }}</strong></p>
+{% endif %}
+
+{% if erros_detalhados %}
+    <h3>Erros:</h3>
+    <ul>
+        {% for erro in erros_detalhados %}
+            <li style="color:red;">{{ erro }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<br>
+<a href="{% url 'dashboard' %}">Voltar ao Dashboard</a>
+
+</body>
+</html>
